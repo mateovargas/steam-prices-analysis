@@ -376,7 +376,21 @@ def fetch_appdetails_single(
     params = {"appids": str(appid), "l": "english", "cc": "us"}
     limiter.wait()
     for attempt in range(1, 6):
-        r = session.get(APP_DETAILS_URL, params=params, timeout=60)
+        try:
+            r = session.get(APP_DETAILS_URL, params=params, timeout=60)
+        except (
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.ConnectionError,
+        ) as e:
+            logging.warning(
+                "appdetails %s: %s (attempt %d/5)",
+                appid,
+                e,
+                attempt,
+            )
+            time.sleep(min(30, 2**attempt))
+            continue
         if r.status_code in (429, 500, 502, 503, 504):
             time.sleep(min(30, 2**attempt))
             continue
@@ -404,7 +418,21 @@ def fetch_steamspy_appdetails(
     params = {"request": "appdetails", "appid": appid}
     limiter.wait()
     for attempt in range(1, 6):
-        r = session.get(STEAM_SPY_API_URL, params=params, timeout=60)
+        try:
+            r = session.get(STEAM_SPY_API_URL, params=params, timeout=60)
+        except (
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.ConnectionError,
+        ) as e:
+            logging.warning(
+                "Steam Spy appdetails %s: %s (attempt %d/5)",
+                appid,
+                e,
+                attempt,
+            )
+            time.sleep(min(30, 2**attempt))
+            continue
         if r.status_code in (429, 500, 502, 503, 504):
             time.sleep(min(30, 2**attempt))
             continue

@@ -1,0 +1,7 @@
+INFO Using release cutoff: 2016-05-06 (--release-cutoff-days=3650)
+INFO Fetching IStoreService/GetAppList (games only), target rows=20000 …
+INFO Collected 20000 catalog rows from IStoreService
+WARNING Steam Spy appdetails 490870: HTTPSConnectionPool(host='steamspy.com', port=443): Read timed out. (read timeout=60) (attempt 1/5)
+INFO Done. examined=20000 matches=10739 store_failures=44 cache_hits=0 steamspy_failures=3 not_game=1 coming_soon=606 bad_date=35 no_sp=609 before_cutoff=6690 free=1242 unpriced=34
+INFO Wrote 10739 rows to /Users/mateovargas/Documents/Development/steam-price-analysis/data/single-player-games.csv
+INFO JSON not written (use --output path.json to export JSON)

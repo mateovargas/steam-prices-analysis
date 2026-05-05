@@ -1,2 +1,4 @@
 .env
 .venv/
+data/store-appdetails-cache.json
+data/steamspy-cache.json

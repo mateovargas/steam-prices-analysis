@@ -1,0 +1,6 @@
+INFO Using release cutoff: 2016-05-06 (--release-cutoff-days=3650)
+INFO Fetching IStoreService/GetAppList (games only), target rows=10000 …
+INFO Collected 10000 catalog rows from IStoreService
+INFO Done. examined=10000 matches=2697 store_failures=26 cache_hits=0 steamspy_failures=0 not_game=1 coming_soon=114 bad_date=33 no_sp=160 before_cutoff=6689 free=274 unpriced=6
+INFO Wrote 2697 rows to /Users/mateovargas/Documents/Development/steam-price-analysis/data/single-player-games.csv
+INFO JSON not written (use --output path.json to export JSON)
