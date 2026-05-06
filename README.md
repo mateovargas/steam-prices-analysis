@@ -27,8 +27,6 @@ The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `
 
 **Interpretation note:** because `steamspy_owners` is an estimated range, the dataset supports modeling **associations** between price/features and an ownership proxy—not causal identification of an “optimal price point.”
 
-# How to Use this Repo
-
 ## Setup
 
 1. Create a virtual environment and install dependencies:
