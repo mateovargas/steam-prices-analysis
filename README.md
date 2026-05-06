@@ -2,6 +2,33 @@
 
 Scripts to collect **paid, single-player** Steam games (by Store categories and release date), enrich rows with **Steam Spy** `appdetails`, and write CSV (and optional JSON).
 
+## Dataset summary
+
+The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `data/single-player-games.csv` into `data/single-player-games-cleaned.parquet` (and optional CSV) and saves standard EDA plots into [`visualizations/`](visualizations/).
+
+- **Rows kept (usable for ML)**: **10,736** (dropped **3** rows with unparseable `steamspy_owners` ranges)
+- **Target proxy**: `owners_mid` / `log_owners_mid` derived from SteamSpy owner **ranges** (estimates, not true sales)
+- **Price distribution (USD)** (see `visualizations/price_usd_hist.png`):
+  - **Median**: **$5.99** (25th: **$2.99**, 75th: **$12.99**)
+  - **90th/95th/99th**: **$19.99 / $24.99 / $39.99**
+  - **Min**: **$0.49**
+- **Owners proxy distribution is highly discrete / skewed** (see `visualizations/owners_mid_log_hist.png`):
+  - **50th percentile owners_mid**: **10,000**
+  - **75th/90th/95th/99th**: **35,000 / 150,000 / 350,000 / 3,500,000**
+- **Engagement fields are zero-inflated**:
+  - `steamspy_ccu` is **0** for ~**75.6%** of rows
+  - `steamspy_median_forever` is **0** for **100%** of rows in this snapshot (treat as non-informative unless refreshed)
+- **Simple correlations vs `log_owners_mid` are modest** (see `visualizations/correlation_heatmap_numeric.png`):
+  - `price_usd`: **~0.29**
+  - `steamspy_ccu`: **~0.25**
+  - `age_days`: **~-0.06**
+- **Most common `primary_genre` values** (top 5): **Action (4,901)**, **Adventure (2,223)**, **Casual (1,609)**, **Indie (1,034)**, **Simulation (218)**  
+  (also see `visualizations/price_by_primary_genre_box.png` and `visualizations/mean_log_owners_by_primary_genre_bar.png`)
+
+**Interpretation note:** because `steamspy_owners` is an estimated range, the dataset supports modeling **associations** between price/features and an ownership proxy—not causal identification of an “optimal price point.”
+
+# How to Use this Repo
+
 ## Setup
 
 1. Create a virtual environment and install dependencies:
