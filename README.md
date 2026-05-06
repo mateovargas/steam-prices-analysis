@@ -55,6 +55,19 @@ For all flags:
 python data-retrieval.py --help
 ```
 
+## Clean data for ML (`steam-price-analysis.ipynb`)
+
+After you have `data/single-player-games.csv`, open [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) and **run all cells** (from top to bottom). The first code cell sets paths and options (`REFERENCE_DATE`, `GENRE_TOP_K`, `MIN_OWNERS_MID`, `WRITE_CSV_MIRROR`).
+
+**Outputs**
+
+- `data/single-player-games-cleaned.parquet` (recommended for pandas / ML)
+- `data/single-player-games-cleaned.csv` (optional mirror for spreadsheets), unless you set `WRITE_CSV_MIRROR = False`
+
+**Important:** SteamSpy **owner ranges** are estimates, not true sales. The notebook parses them into `owners_mid` and `log_owners_mid` as a **sales proxy**; models describe association with that proxy, not a causal “best price.”
+
+Requires the same stack as [`requirements.txt`](requirements.txt) (`pandas`, `numpy`, `pyarrow`). Use a Jupyter-compatible environment (e.g. VS Code / Cursor notebook UI, or `pip install jupyter` and run `jupyter notebook`).
+
 ## Run `data-retrieval-test.py`
 
 Smoke test: runs the **same pipeline** as `data-retrieval.py` via import, writes **all** matches to `data/test-data.csv`. It uses the script defaults from `data-retrieval.py` for the release cutoff (including the default from `DEFAULT_RELEASE_CUTOFF_DAYS`).
