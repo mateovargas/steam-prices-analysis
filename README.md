@@ -4,7 +4,7 @@ Scripts to collect **paid, single-player** Steam games (by Store categories and 
 
 ## Dataset summary
 
-The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `data/single-player-games.csv` into `data/single-player-games-cleaned.parquet` (and optional CSV) and saves standard EDA plots into [`visualizations/`](visualizations/).
+The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `data/single-player-games.csv` into `data/single-player-games-cleaned.parquet` (and optional CSV) and saves standard EDA plots into [`visualizations/`](visualizations/). Those outputs are **gitignored**—run the notebook locally to regenerate them (keeps PRs small).
 
 - **Rows kept (usable for ML)**: **10,736** (dropped **3** rows with unparseable `steamspy_owners` ranges)
 - **Target proxy**: `owners_mid` / `log_owners_mid` derived from SteamSpy owner **ranges** (estimates, not true sales)
@@ -84,10 +84,13 @@ python data-retrieval.py --help
 
 After you have `data/single-player-games.csv`, open [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) and **run all cells** (from top to bottom). The first code cell sets paths and options (`REFERENCE_DATE`, `GENRE_TOP_K`, `MIN_OWNERS_MID`, `WRITE_CSV_MIRROR`).
 
-**Outputs**
+**Outputs** (local only; listed in `.gitignore`)
 
 - `data/single-player-games-cleaned.parquet` (recommended for pandas / ML)
-- `data/single-player-games-cleaned.csv` (optional mirror for spreadsheets), unless you set `WRITE_CSV_MIRROR = False`
+- `data/single-player-games-cleaned.csv` (optional mirror if `WRITE_CSV_MIRROR = True`)
+- `visualizations/*.png` (EDA and model plots from §8–§9)
+
+Before opening a PR, run the notebook then **clear outputs** if you commit the `.ipynb` (e.g. *Clear All Outputs* in the notebook UI, or `jupyter nbconvert --clear-output --inplace steam-price-analysis.ipynb`).
 
 **Important:** SteamSpy **owner ranges** are estimates, not true sales. The notebook parses them into `owners_mid` and `log_owners_mid` as a **sales proxy**; models describe association with that proxy, not a causal “best price.”
 
