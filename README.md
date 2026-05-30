@@ -20,7 +20,9 @@ Analysis of **paid, single-player Steam games**: data collection, cleaning, expl
 
 **Recommendation for stakeholders:** Use models to **explore scenarios and rank approaches**, not to set launch price without comps, wishlist data, or experiments.
 
-Full interpretation, plots, and next steps are in **§8–§11** of the [notebook](steam-price-analysis.ipynb).
+**Detailed review:** see [`FINDINGS.md`](FINDINGS.md) for the full narrative, metrics tables, chart index, and stakeholder recommendations.
+
+Full interpretation, plots, and next steps are also in **§8–§11** of the [notebook](steam-price-analysis.ipynb).
 
 ---
 
@@ -62,7 +64,11 @@ Full interpretation, plots, and next steps are in **§8–§11** of the [noteboo
 2. Open [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) and **Run All**.
 3. Outputs appear locally:
    - `data/single-player-games-cleaned.parquet`
-   - `visualizations/*.png` (histograms, scatter plots, correlation heatmap, model comparison chart)
+   - `visualizations/*.png`, including:
+     - **EDA (§8):** price/owners histograms, scatter plots, genre box/bar charts, correlation heatmap
+     - **Tags (§8b):** `tag_prevalence_top15.png`, `mean_log_owners_by_top_tags.png`
+     - **OLS (§9):** `optimal_price_revenue_curve.png`, `ols_actual_vs_predicted_test.png`, `ols_residuals_test.png`
+     - **Models (§10):** `model_comparison_test_r2.png`, `model_comparison_rmse_mae.png`, `model_comparison_train_vs_test_r2.png`, `model_comparison_cv_vs_test_r2.png`, `best_model_actual_vs_predicted.png`, `best_model_feature_importance.png`
 
 **Modeling notes:** Section 10 compares OLS, Ridge, Lasso, Random Forest, KNN (grid search), MLP, and Gradient Boosting with cross-validation where noted. Evaluation uses **R²** (primary), **RMSE**, and **MAE** on a held-out 20% test set.
 
