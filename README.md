@@ -1,31 +1,41 @@
 # steam-price-analysis
 
-Scripts to collect **paid, single-player** Steam games (by Store categories and release date), enrich rows with **Steam Spy** `appdetails`, and write CSV (and optional JSON).
+Analysis of **paid, single-player Steam games**: data collection, cleaning, exploratory visualization, and **multiple regression models** relating list price and metadata to SteamSpy’s estimated owner counts.
 
-## Dataset summary
+**Main deliverable:** [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) — run all cells top to bottom after setup below.
 
-The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `data/single-player-games.csv` into `data/single-player-games-cleaned.parquet` (and optional CSV) and saves standard EDA plots into [`visualizations/`](visualizations/). Those outputs are **gitignored**—run the notebook locally to regenerate them (keeps PRs small).
+---
 
-- **Rows kept (usable for ML)**: **10,736** (dropped **3** rows with unparseable `steamspy_owners` ranges)
-- **Target proxy**: `owners_mid` / `log_owners_mid` derived from SteamSpy owner **ranges** (estimates, not true sales)
-- **Price distribution (USD)** (see `visualizations/price_usd_hist.png`):
-  - **Median**: **$5.99** (25th: **$2.99**, 75th: **$12.99**)
-  - **90th/95th/99th**: **$19.99 / $24.99 / $39.99**
-  - **Min**: **$0.49**
-- **Owners proxy distribution is highly discrete / skewed** (see `visualizations/owners_mid_log_hist.png`):
-  - **50th percentile owners_mid**: **10,000**
-  - **75th/90th/95th/99th**: **35,000 / 150,000 / 350,000 / 3,500,000**
-- **Engagement fields are zero-inflated**:
-  - `steamspy_ccu` is **0** for ~**75.6%** of rows
-  - `steamspy_median_forever` is **0** for **100%** of rows in this snapshot (treat as non-informative unless refreshed)
-- **Simple correlations vs `log_owners_mid` are modest** (see `visualizations/correlation_heatmap_numeric.png`):
-  - `price_usd`: **~0.29**
-  - `steamspy_ccu`: **~0.25**
-  - `age_days`: **~-0.06**
-- **Most common `primary_genre` values** (top 5): **Action (4,901)**, **Adventure (2,223)**, **Casual (1,609)**, **Indie (1,034)**, **Simulation (218)**  
-  (also see `visualizations/price_by_primary_genre_box.png` and `visualizations/mean_log_owners_by_primary_genre_bar.png`)
+## Key findings (summary)
 
-**Interpretation note:** because `steamspy_owners` is an estimated range, the dataset supports modeling **associations** between price/features and an ownership proxy—not causal identification of an “optimal price point.”
+**Business question:** What list price and game characteristics are associated with stronger *estimated* sales on Steam?
+
+| Finding | Detail |
+|---------|--------|
+| **Dataset** | ~**10,736** games after cleaning; target = log of SteamSpy owner-range **midpoint** (sales proxy, not verified units). |
+| **Typical price** | Median list price **$5.99**; 75th percentile **$12.99**. |
+| **Price vs owners** | Correlation with log owners is **modest (~0.29)**; genre/tags and unmeasured quality dominate. |
+| **Linear “optimal price” (§9)** | Catalog OLS often peaks at the **high end of observed prices**—reflects confounding (hits are expensive *and* popular), **not** a causal pricing rule. |
+| **Model comparison (§10)** | Seven models tested with **holdout R²**, **RMSE/MAE**, and **5-fold CV**. **Gradient Boosting / Random Forest** typically best (~**0.44** test R²); linear models ~**0.33** with full genre + tag features. |
+
+**Recommendation for stakeholders:** Use models to **explore scenarios and rank approaches**, not to set launch price without comps, wishlist data, or experiments.
+
+Full interpretation, plots, and next steps are in **§8–§11** of the [notebook](steam-price-analysis.ipynb).
+
+---
+
+## Project layout
+
+| Path | Purpose |
+|------|---------|
+| [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) | Cleaning, EDA, modeling, findings |
+| [`data-retrieval.py`](data-retrieval.py) | Fetch Steam + SteamSpy data → CSV |
+| [`data/single-player-games.csv`](data/single-player-games.csv) | Raw input (~10.7k games) |
+| `data/single-player-games-cleaned.parquet` | **Generated locally** by notebook (gitignored) |
+| `visualizations/` | **Generated locally** EDA and model plots (gitignored) |
+| [`requirements.txt`](requirements.txt) | Python dependencies |
+
+---
 
 ## Setup
 
@@ -38,82 +48,53 @@ The notebook [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) cleans `
    pip install -r requirements.txt
    ```
 
-2. **Steam Web API key** (required for the game list): create one at [Steam Web API](https://steamcommunity.com/dev/apikey) and set it in a `.env` file in the project root:
+2. **Steam Web API key** (required for data collection): create one at [Steam Web API](https://steamcommunity.com/dev/apikey) and set it in `.env`:
 
    ```bash
    STEAM_WEB_API_KEY=your_key_here
    ```
 
-   The main script loads `.env` automatically (`python-dotenv`).
+---
 
-## Run `data-retrieval.py`
+## Run the notebook
 
-From the project directory (use the hyphenated filename):
+1. Ensure `data/single-player-games.csv` exists (see data retrieval below).
+2. Open [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) and **Run All**.
+3. Outputs appear locally:
+   - `data/single-player-games-cleaned.parquet`
+   - `visualizations/*.png` (histograms, scatter plots, correlation heatmap, model comparison chart)
+
+**Modeling notes:** Section 10 compares OLS, Ridge, Lasso, Random Forest, KNN (grid search), MLP, and Gradient Boosting with cross-validation where noted. Evaluation uses **R²** (primary), **RMSE**, and **MAE** on a held-out 20% test set.
+
+Before committing the notebook, **clear cell outputs** to avoid large diffs (`Clear All Outputs` in the notebook UI).
+
+---
+
+## Data retrieval
 
 ```bash
 python data-retrieval.py
 ```
 
-Default output is `data/single-player-games.csv`. Matching rows are games that pass Store filters (type game, Single-player, paid USD price, release on or after the cutoff). The default rolling cutoff is **about the last 10 years** (`365 * 10` days before today); override with `--release-cutoff-days` or a fixed `--min-release-date YYYY-MM-DD`.
+Default output: `data/single-player-games.csv`. See `python data-retrieval.py --help` for options (`--max-apps`, `--csv-path`, caches, etc.).
 
-Useful options:
-
-| Flag | Meaning |
-|------|---------|
-| `--max-apps N` | Inspect at most **N** catalog entries from IStoreService list order (after `--start-offset`). |
-| `--start-offset N` | Skip the first **N** rows of that list window. |
-| `--csv-path PATH` | Output CSV path (default: `data/single-player-games.csv`). |
-| `--output PATH` | Also write JSON results. |
-| `--cache-path PATH` | Cache raw Store `appdetails` JSON by appid to speed reruns. |
-| `--steamspy-cache-path PATH` | Cache Steam Spy `appdetails` per appid (24h TTL). |
-| `--full-run` | Scan the full game catalog (very slow). |
-
-Example:
-
-```bash
-python data-retrieval.py --max-apps 500 --start-offset 0 --steamspy-cache-path data/steamspy-cache.json
-```
-
-For all flags:
-
-```bash
-python data-retrieval.py --help
-```
-
-## Clean data for ML (`steam-price-analysis.ipynb`)
-
-After you have `data/single-player-games.csv`, open [`steam-price-analysis.ipynb`](steam-price-analysis.ipynb) and **run all cells** (from top to bottom). The first code cell sets paths and options (`REFERENCE_DATE`, `GENRE_TOP_K`, `MIN_OWNERS_MID`, `WRITE_CSV_MIRROR`).
-
-**Outputs** (local only; listed in `.gitignore`)
-
-- `data/single-player-games-cleaned.parquet` (recommended for pandas / ML)
-- `data/single-player-games-cleaned.csv` (optional mirror if `WRITE_CSV_MIRROR = True`)
-- `visualizations/*.png` (EDA and model plots from §8–§9)
-
-Before opening a PR, run the notebook then **clear outputs** if you commit the `.ipynb` (e.g. *Clear All Outputs* in the notebook UI, or `jupyter nbconvert --clear-output --inplace steam-price-analysis.ipynb`).
-
-**Important:** SteamSpy **owner ranges** are estimates, not true sales. The notebook parses them into `owners_mid` and `log_owners_mid` as a **sales proxy**; models describe association with that proxy, not a causal “best price.”
-
-Requires the same stack as [`requirements.txt`](requirements.txt) (`pandas`, `numpy`, `pyarrow`). Use a Jupyter-compatible environment (e.g. VS Code / Cursor notebook UI, or `pip install jupyter` and run `jupyter notebook`).
-
-## Run `data-retrieval-test.py`
-
-Smoke test: runs the **same pipeline** as `data-retrieval.py` via import, writes **all** matches to `data/test-data.csv`. It uses the script defaults from `data-retrieval.py` for the release cutoff (including the default from `DEFAULT_RELEASE_CUTOFF_DAYS`).
+Smoke test:
 
 ```bash
 python data-retrieval-test.py
 ```
 
-Defaults are tuned for a shorter run: **`--start-offset 90000`** and **`--max-apps 50`** (50 catalog entries examined, not necessarily 50 CSV rows). Override:
+---
 
-```bash
-python data-retrieval-test.py --max-apps 100 --start-offset 80000
-```
+## Limitations
 
-Exit code `0` if at least one row matched; `1` if none matched in that window.
+- SteamSpy **owner ranges** are estimates, not audited sales.
+- Cross-sectional data supports **association**, not causal “optimal price.”
+- Engagement fields (`steamspy_ccu`, median playtime) are often zero in this snapshot.
+
+---
 
 ## Notes
 
-- Store `appdetails` is rate-limited (on the order of ~200 requests per 5 minutes per IP); large `--max-apps` runs take a long time.
-- Steam Spy allows about **one request per second** per their API notes; the script throttles accordingly.
-- The number of CSV rows is **matches**, not `--max-apps`; many examined apps are skipped (wrong category, free, outside release window, etc.).
+- Store and SteamSpy APIs are rate-limited; large pulls take time.
+- CSV row count is **matches**, not `--max-apps` examined.
